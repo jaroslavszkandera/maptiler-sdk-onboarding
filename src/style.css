@@ -1,0 +1,24 @@
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+/* The map container needs an explicit size, otherwise it renders at 0px height */
+#map {
+  position: absolute;
+  inset: 0;
+}
+
+.city-select-ctrl select {
+  border: 0;
+  background: transparent;
+  padding: 6px 8px;
+  font: 14px system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.city-marker {
+  cursor: pointer;
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.35));
+}
