@@ -14,11 +14,49 @@ body {
   border: 0;
   background: transparent;
   padding: 6px 8px;
-  font: 14px system-ui, sans-serif;
+  font:
+    14px system-ui,
+    sans-serif;
   cursor: pointer;
 }
 
 .city-marker {
   cursor: pointer;
   filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.35));
+}
+
+#panel {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
+  font:
+    13px system-ui,
+    sans-serif;
+}
+
+#coords {
+  margin: 0;
+  font:
+    13px ui-monospace,
+    monospace;
+}
+
+#panel label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+#city {
+  font: inherit;
+  padding: 3px 6px;
+  min-width: 14em;
 }
