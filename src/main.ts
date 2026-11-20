@@ -15,56 +15,57 @@ const map = new maptilersdk.Map({
 	container: "map",
 	style: maptilersdk.MapStyle.STREETS,
 	center: [14.42, 50.087],
-	zoom: 12,
+	zoom: 3,
 });
 
-const coordsEl = document.getElementById("coords") as HTMLPreElement;
+const hue = (t: number, offset = 0, s = 85, l = 55) =>
+	`hsl(${(t * 60 + offset) % 360}, ${s}%, ${l}%)`;
 
-const marker = new maptilersdk.Marker({ draggable: true, color: "#e53935" })
-	.setLngLat(map.getCenter())
-	.addTo(map);
+map.on("load", () => {
+	const layers = map.getLayersOrder();
+	console.table(layers.map((id) => ({ id, type: map.getLayer(id)?.type })));
 
-const format = ({ lng, lat }: maptilersdk.LngLat) =>
-	`${lng.toFixed(6)}, ${lat.toFixed(6)}`;
+	const has = (id: string) => layers.includes(id);
+	const roadLines = [
+		"Highway line",
+		"Major road line",
+		"Minor road line",
+	].filter(has);
+	const labels = layers.filter((id) => map.getLayer(id)?.type === "symbol");
 
-const cityEl = document.getElementById("city") as HTMLInputElement;
+	const animate = (now: number) => {
+		const t = now / 1000; // seconds
 
-let lookupId = 0;
+		if (has("Water")) map.setPaintProperty("Water", "fill-color", hue(t));
+		if (has("Background"))
+			map.setPaintProperty(
+				"Background",
+				"background-color",
+				hue(t, 180, 60, 20),
+			);
 
-async function findNearestCity(
-	lngLat: maptilersdk.LngLat,
-): Promise<string | null> {
-	const res = await maptilersdk.geocoding.reverse([lngLat.lng, lngLat.lat], {
-		types: ["municipality", "subregion"],
-	});
-	const byType = (t: "municipality" | "subregion") =>
-		res.features.find((f) => f.place_type.includes(t))?.text;
-	console.log(res);
-	return byType("municipality") ?? byType("subregion") ?? null;
-}
+		if (has("Forest")) map.setPaintProperty("Forest", "fill-color", hue(t, 90));
+		if (has("Residential"))
+			map.setPaintProperty(
+				"Residential",
+				"fill-opacity",
+				0.4 + 0.4 * Math.sin(t * 2),
+			);
 
-async function onCoordinates(lngLat: maptilersdk.LngLat): Promise<void> {
-	coordsEl.textContent = format(lngLat);
-	const id = ++lookupId;
-	cityEl.value = "Looking up…";
+		roadLines.forEach((id, i) => {
+			map.setPaintProperty(id, "line-color", hue(t, 120 + i * 40, 100, 60));
+			map.setPaintProperty(id, "line-width", 2 + 1.5 * Math.sin(t * 3 + i)); // pulse
+		});
 
-	try {
-		const city = await findNearestCity(lngLat);
-		if (id !== lookupId) return; // a newer drop will discard stale req
-		cityEl.value = city ?? "No city nearby";
-	} catch (err) {
-		if (id !== lookupId) return;
-		console.error("Reverse geocoding failed:", err);
-		cityEl.value = "Lookup failed";
-	}
-}
+		for (const id of labels) {
+			map.setPaintProperty(id, "text-color", hue(t, 240, 100, 70));
+			map.setPaintProperty(id, "text-halo-color", hue(t, 60, 100, 15));
+		}
 
-marker.on("drag", () => {
-	coordsEl.textContent = format(marker.getLngLat());
+		requestAnimationFrame(animate);
+	};
+
+	requestAnimationFrame(animate);
 });
 
-marker.on("dragend", () => void onCoordinates(marker.getLngLat()));
-
-void onCoordinates(marker.getLngLat());
-
-export { map, marker };
+export { map };
